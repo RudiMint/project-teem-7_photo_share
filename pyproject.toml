@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "project-teem-7-photo-share"
+version = "0.1.0"
+description = ""
+authors = ["Anastasia <ashevchenko629@gmail.com>"]
+readme = "README.md"
+packages = [{include = "project_teem_7_photo_share"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -2,6 +2,7 @@ import contextlib
 
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from src.conf.config import config
+from src.database.models import Base, Role
 
 
 class DatabaseSessionManager:
@@ -24,14 +25,20 @@ class DatabaseSessionManager:
         finally:
             await session.close()
 
+    async def create_tables(self):
+        async with self._engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+
 
 sessionmanager = DatabaseSessionManager(config.DB_URL)
 
 async def get_db():
+    await sessionmanager.create_tables()
     async with sessionmanager.session() as session:
         print("ok")
         yield session
 
-async def get_db():
-    async with sessionmanager.session() as session:
-        yield session
+# async def get_db():
+#     async with sessionmanager.session() as session:
+#         yield session

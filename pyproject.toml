@@ -8,6 +8,23 @@ packages = [{include = "project_teem_7_photo_share"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+sqlalchemy = "^2.0.25"
+pydantic = "^2.5.3"
+pydantic-settings = "^2.1.0"
+asyncpg = "^0.29.0"
+fastapi = "^0.109.0"
+libgravatar = "^1.0.4"
+cloudinary = "^1.38.0"
+fastapi-limiter = "^0.1.6"
+passlib = "^1.7.4"
+python-jose = "^3.3.0"
+bcrypt = "^4.1.2"
+fastapi-mail = "^1.4.1"
+python-multipart = "^0.0.6"
+uvicorn = {extras = ["standart"], version = "^0.25.0"}
+alembic = "^1.13.1"
+psycopg2 = "^2.9.9"
+bearer = "^3.1.0"
 
 
 [build-system]

@@ -1,0 +1,7 @@
+pydantic~=2.5.3
+cloudinary~=1.38.0
+fastapi~=0.109.0
+sqlalchemy~=2.0.25
+passlib~=1.7.4
+libgravatar~=1.0.4
+python-jose=3.3.0

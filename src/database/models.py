@@ -4,6 +4,7 @@ from datetime import date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import String, Integer, ForeignKey, DateTime, func, Enum, Column, Boolean
+from pydantic import BaseModel
 
 
 class Base(DeclarativeBase):
@@ -14,6 +15,10 @@ class Role(enum.Enum):
     admin: str = "admin"
     moderator: str = "moderator"
     user: str = "user"
+
+
+class CommentCreate(BaseModel):
+    text: str
 
 
 class User(Base):

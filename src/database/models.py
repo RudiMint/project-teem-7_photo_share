@@ -51,6 +51,35 @@ class Comment(Base):
     updated_at: Mapped[date] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
 
+class Photo(Base):
+    __tablename__ = "photos"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    image_path: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String(255))
+    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[date] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[date] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+
+
+class PhotoTag(Base):
+    __tablename__ = "photo_tags"
+
+    photo_id: Mapped[int] = mapped_column(Integer, ForeignKey("photos.id", ondelete="CASCADE"), primary_key=True)
+    tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True)
+
+Photo.tags = relationship("Tag", secondary="photo_tags", back_populates="photos")
+Tag.photos = relationship("Photo", secondary="photo_tags", back_populates="tags")
+User.photos = relationship("Photo", back_populates="user")
+Photo.user = relationship("User", back_populates="photos")
+
 User.images = relationship("Image", back_populates="user")
 User.comments = relationship("Comment", back_populates="user")
 Image.user = relationship("User", back_populates="images")

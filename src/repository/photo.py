@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Photo, User, Tag, PhotoTag
+from src.database.models import Photo, User, Tag, PhotoTag, Role
 from src.schemas.photo import PhotoSchema, PhotoUpdateSchema, PhotoResponse
 
 
@@ -34,3 +34,39 @@ async def get_all_photos(limit: int, offset: int, db: AsyncSession, user: User):
     if photos_for_scheme:
         return photos_for_scheme
     return {"message": "You haven't uploaded any photos yet"}
+
+
+async def update_photo(photo_id: int, description, db: AsyncSession, user: User):
+    stmt = select(Photo).filter_by(id=photo_id, user=user)
+    result = await db.execute(stmt)
+    photo = result.scalar_one_or_none()
+    if photo:
+        print(user.role.value)
+        if photo.owner_id != user.id and user.role.value != "admin":
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to edit this photo"
+            )
+        photo.description = description
+        await db.commit()
+        await db.refresh(photo)
+    return photo
+
+
+async def delete_photo(photo_id: int, db: AsyncSession, user: User):
+    stmt = select(Photo).filter_by(id=photo_id, user=user)
+    photo = await db.execute(stmt)
+    photo = photo.scalar_one_or_none()
+    if photo:
+        if photo.owner_id != user.id and user.role.value != "admin":
+            raise HTTPException(
+                status_code=403, detail="You don't have permission to delete this photo"
+            )
+        await db.delete(photo)
+        await db.commit()
+    return {"message": f"Photo with ID {photo_id} deleted successfully"}
+
+
+async def get_photo(photo_id: int, db: AsyncSession, user: User):
+    stmt = select(Photo).filter_by(id=photo_id, user=user)
+    todo = await db.execute(stmt)
+    return todo.scalar_one_or_none()

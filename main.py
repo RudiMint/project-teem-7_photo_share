@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 
-from src.routes import users, auth
+from src.routes import users, auth, photo, comments
 
 app = FastAPI()
 
@@ -47,6 +47,8 @@ BASE_DIR = Path("../..")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
+app.include_router(photo.router, prefix="/api")
+app.include_router(comments.router, prefix="/api")
 
 templates = Jinja2Templates(directory=BASE_DIR / "src" / "templates")
 

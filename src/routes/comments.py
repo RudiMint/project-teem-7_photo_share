@@ -1,31 +1,31 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from src.schemas.comments import Comment, CommentCreate
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.database.db import get_db
-from typing import List
+from src.database.models import User
+from src.schemas.comments import CommentCreate, CommentResponse
+from src.services.auth import auth_service
+from src.repository import comments as comment_repository
 
-router = APIRouter(prefix="/comments", tags=["Comments"])
-
-
-@router.post("/photos/{photo_id}/", response_model=Comment)
-async def create_comment(
-    photo_id: int,
-    comment: CommentCreate,
-    db: Session = Depends(get_db)
-):
-    photo = db.query(Photo).filter(Photo.id == photo_id).first()
-    if photo is None:
-        raise HTTPException(status_code=404, detail="Photo not found")
-
-    new_comment = Comment(**comment.dict(), photo_id=photo_id)
-    db.add(new_comment)
-    db.commit()
-    db.refresh(new_comment)
-
-    return new_comment
+router = APIRouter(prefix='/comments', tags=['comments'])
 
 
-@router.get("/photos/{photo_id}/", response_model=List[Comment])
-async def get_comments_for_photo(photo_id: int, db: Session = Depends(get_db)):
-    comments = db.query(Comment).filter(Comment.photo_id == photo_id).all()
+@router.post("/", response_model=CommentResponse)
+async def create_comment(photo_id: int, comment: CommentCreate, db: AsyncSession = Depends(get_db),
+                         user: User = Depends(auth_service.get_current_user)):
+    comment = await comment_repository.create_comment(photo_id, comment, db, user)
+    return comment
+
+
+@router.get("/{photo_id}", response_model=list[CommentResponse])
+async def get_comments(photo_id: int, limit: int = Query(10, ge=1, le=100),
+                       db: AsyncSession = Depends(get_db), user: User = Depends(auth_service.get_current_user)):
+    comments = await comment_repository.get_comments(photo_id, limit, db, user)
     return comments
+
+
+@router.put("/{comment_id}", response_model=CommentResponse)
+async def update_comment(comment_id: int, new_content: str, db: AsyncSession = Depends(get_db),
+                         user: User = Depends(auth_service.get_current_user)):
+    comment = await comment_repository.update_comment(comment_id, new_content, db, user)
+    return comment

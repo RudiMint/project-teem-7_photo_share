@@ -8,7 +8,8 @@ from src.services.photo_service import get_photo_by_id
 async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSession, user: auth_service.get_current_user):
     photo = await get_photo_by_id(photo_id, db)
     if photo:
-        comment = Comment(**comment_data.dict(), user_id=user.id, photo_id=photo.id)
+        current_time = datetime.utcnow()
+        comment = Comment(**comment_data.dict(), user_id=user.id, photo_id=photo.id, created_at=current_time)
         db.add(comment)
         await db.commit()
         await db.refresh(comment)
@@ -27,8 +28,12 @@ async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSe
     if comment:
         comment = comment.scalar()
         if comment.user_id == user.id:
+            # Оновлення полів коментаря
             for key, value in comment_data.dict().items():
                 setattr(comment, key, value)
+            comment.updated_at = datetime.utcnow()
+
             await db.commit()
+            await db.refresh(comment)
             return comment
     return None

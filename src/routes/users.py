@@ -57,3 +57,43 @@ async def get_db_status(db: AsyncSession = Depends(get_db)):
         return JSONResponse(content={"message": "Database is reachable"}, status_code=200)
     else:
         return JSONResponse(content={"message": "Failed to connect to the database"}, status_code=500)
+
+@router.get("/", response_model=list[UserResponse])
+async def get_users(db: AsyncSession = Depends(get_db),
+                    current_user: User = Depends(auth_service.get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    users = await user_repository.get_all_users(db)
+    return users
+
+
+@router.post("/assign-moderator-role/{user_id}", response_model=UserResponse)
+async def assign_moderator_role(user_id: int, db: AsyncSession = Depends(get_db),
+                                current_user: User = Depends(auth_service.get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    user = await user_repository.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.role = Role.moderator
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+@router.post("/remove-moderator-role/{user_id}", response_model=UserResponse)
+async def remove_moderator_role(user_id: int, db: AsyncSession = Depends(get_db),
+                                current_user: User = Depends(auth_service.get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    user = await user_repository.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.role = Role.user
+    await db.commit()
+    await db.refresh(user)
+    return user

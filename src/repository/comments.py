@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from src.database.models import Comment
+from sqlalchemy import delete, select
+
+from src.database.models import Comment, User
 from src.schemas.comments import CommentCreate
 from src.services.auth import auth_service
 from src.services.photo_service import get_photo_by_id
@@ -28,7 +30,6 @@ async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSe
     if comment:
         comment = comment.scalar()
         if comment.user_id == user.id:
-            # Оновлення полів коментаря
             for key, value in comment_data.dict().items():
                 setattr(comment, key, value)
             comment.updated_at = datetime.utcnow()
@@ -37,3 +38,19 @@ async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSe
             await db.refresh(comment)
             return comment
     return None
+
+async def delete_comment(comment_id: int, db: AsyncSession, user: User):
+    comment = await db.execute(select(Comment).filter_by(id=comment_id))
+
+    if not comment.scalar():
+        return None
+
+    comment_model = comment.scalar()
+
+    if not user.is_admin and not user.is_moderator and comment_model.user_id != user.id:
+        return None
+
+    await db.execute(delete(Comment).where(Comment.id == comment_id))
+    await db.commit()
+
+    return comment_model

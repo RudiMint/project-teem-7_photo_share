@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.database.models import User
-from src.schemas.comments import CommentCreate, CommentResponse
+from src.schemas.comments import CommentCreate, Comment as CommentResponse
 from src.services.auth import auth_service
 from src.repository import comments as comment_repository
 

@@ -47,7 +47,7 @@ class Comment(Base):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    image_id: Mapped[int] = mapped_column(Integer, ForeignKey("images.id"), nullable=False)
+    image_id: Mapped[int] = mapped_column(Integer, ForeignKey("photos.id"), nullable=False)
     text: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[date] = mapped_column(DateTime, default=func.now())
     updated_at: Mapped[date] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
@@ -83,6 +83,6 @@ User.photos = relationship("Photo", back_populates="user")
 Photo.user = relationship("User", back_populates="photos")
 
 User.comments = relationship("Comment", back_populates="user")
-Photo.comments = relationship("Comment", back_populates="image")
+Photo.comments = relationship("Comment", back_populates="photo")
 Comment.user = relationship("User", back_populates="comments")
 Comment.photo = relationship("Photo", back_populates="comments")

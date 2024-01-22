@@ -57,13 +57,14 @@ async def delete_photo(photo_id: int, db: AsyncSession, user: User):
     photo = await db.execute(stmt)
     photo = photo.scalar_one_or_none()
     if photo:
-        if photo.owner_id != user.id and user.role.value != "admin":
+        if photo.user_id != user.id and user.role != Role.admin:
             raise HTTPException(
                 status_code=403, detail="You don't have permission to delete this photo"
             )
         await db.delete(photo)
         await db.commit()
-    return {"message": f"Photo with ID {photo_id} deleted successfully"}
+        return {"message": f"Photo with ID {photo_id} deleted successfully"}
+    raise HTTPException(status_code=404, detail=f"Photo with ID {photo_id} not found")
 
 
 async def get_photo(photo_id: int, db: AsyncSession, user: User):

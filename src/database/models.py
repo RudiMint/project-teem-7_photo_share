@@ -34,12 +34,20 @@ class User(Base):
     role: Mapped[Enum] = mapped_column("role", Enum(Role), default=Role.user, nullable=True)
     confirmed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
 
+    @property
+    def is_admin(self):
+        return self.role == Role.admin
+
+    @property
+    def is_moderator(self):
+        return self.role == Role.moderator
+
 
 class Comment(Base):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    photo_id: Mapped[int] = mapped_column(Integer, ForeignKey("photos.id"), nullable=False)
+    image_id: Mapped[int] = mapped_column(Integer, ForeignKey("images.id"), nullable=False)
     text: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[date] = mapped_column(DateTime, default=func.now())
     updated_at: Mapped[date] = mapped_column(DateTime, default=func.now(), onupdate=func.now())

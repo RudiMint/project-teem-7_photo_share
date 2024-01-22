@@ -55,9 +55,8 @@ async def update_todo(description: str = Form(...), photo_id: int = Path(ge=1), 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT FOUND")
     return photo
 
-
-@router.delete("/{photo_id}")  # status_code=status.HTTP_204_NO_CONTENT
-async def delete_photo(photo_id: int = Path(ge=1), db: AsyncSession = Depends(get_db),
-                       user: User = Depends(auth_service.get_current_user)):
-    todo = await repositories_photos.delete_photo(photo_id, db, user)
-    return todo
+@router.delete("/{photo_id}", response_model=dict)
+async def delete_photo_endpoint(photo_id: int, db: AsyncSession = Depends(get_db),
+                                user: User = Depends(auth_service.get_current_user)):
+    result = await repositories_photos.delete_photo(photo_id, db, user)
+    return result

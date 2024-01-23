@@ -141,14 +141,14 @@ async def delete_photo(photo_id: int, db: AsyncSession, user: User):
             )
         await db.delete(photo)
         await db.commit()
-    return {"message": f"Photo with ID {photo_id} deleted successfully"}
+        return {"message": f"Photo with ID {photo_id} deleted successfully"}
+    return {'message': f'Photo with ID {photo_id} not found'}
 
 
 async def get_photo(photo_id: int, db: AsyncSession, user: User):
     stmt = select(Photo).filter_by(id=photo_id, user=user)
     photo = await db.execute(stmt)
     a = photo.scalar_one_or_none()
-    print(a.user.username)
     return a
 
 

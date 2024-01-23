@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from libgravatar import Gravatar
 
 from src.database.db import get_db
-from src.database.models import User
+from src.database.models import User, Role
 from src.schemas.user import UserSchema
 
 
@@ -29,6 +29,13 @@ async def create_user(body: UserSchema, db: AsyncSession = Depends(get_db)):
         print(err)
 
     new_user = User(**body.model_dump(), avatar=avatar)
+
+    stmt = select(User).limit(1)
+    existing_user = (await db.execute(stmt)).first()
+
+    if not existing_user:
+        new_user.role = Role.admin
+
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)

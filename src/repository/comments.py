@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 
 from src.database.models import Comment, User, Photo
-from src.schemas.comments import CommentCreate
+from src.schemas.comments import CommentCreate, Comment as CommentResponse
 from src.services.auth import auth_service
 from src.services.photo_service import get_photo_by_id
 from sqlalchemy.future import select

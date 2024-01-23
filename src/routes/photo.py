@@ -15,10 +15,15 @@ from src.conf.config import config
 
 router = APIRouter(prefix='/photos', tags=['photos'])
 
+# cloudinary.config(
+#     cloud_name=config.CLD_NAME,
+#     api_key=config.CLD_API_KEY,
+#     api_secret=config.CLD_API_SECRET
+# )
 cloudinary.config(
-    cloud_name=config.CLD_NAME,
-    api_key=config.CLD_API_KEY,
-    api_secret=config.CLD_API_SECRET
+    cloud_name="dqiwzzksb",
+    api_key="299859789124399",
+    api_secret="KT1Phmdl29JuJ2nty8sYQMLJAPs"
 )
 
 

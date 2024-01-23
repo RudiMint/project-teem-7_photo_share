@@ -15,7 +15,7 @@ async def create_photo_info(description: str, tags, db: AsyncSession, user: User
     if tags[0].strip():
         new_tag_list = tags[0].split(',')
         if len(new_tag_list) > 5:
-            error_message = "Too many tags. Maximum is 5."
+            error_message = "Too many tags. Maximum is 5"
             raise HTTPException(status_code=400, detail=error_message)
         for tag in new_tag_list:
             stmt = select(Tag).filter_by(name=tag)

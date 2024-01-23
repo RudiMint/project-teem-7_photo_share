@@ -66,8 +66,6 @@ async def get_my_photos(limit: int, offset: int, db: AsyncSession, user: User):
     photos_with_info = []
     for row in result:
         photo, username, tag = row
-        print(photo)
-        print(photo.tags)
         tags = [t.name for t in photo.tags] if photo.tags else []
         photo_info = PhotoInfo(
             photo_id=photo.id,

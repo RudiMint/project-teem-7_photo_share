@@ -52,6 +52,7 @@ async def create_photo_info(description: str, tags, db: AsyncSession, user: User
 async def get_my_photos(limit: int, offset: int, db: AsyncSession, user: User):
     stmt = (
         select(Photo, User.username, Tag.name)
+        .distinct(Photo.id)
         .offset(offset)
         .limit(limit)
         .filter(Photo.user == user)
@@ -85,6 +86,7 @@ async def get_my_photos(limit: int, offset: int, db: AsyncSession, user: User):
 async def get_all_photos(limit: int, offset: int, db: AsyncSession, user: User):
     stmt = (
         select(Photo, User.username, Tag.name)
+        .distinct(Photo.id)
         .offset(offset)
         .limit(limit)
         .join(User)

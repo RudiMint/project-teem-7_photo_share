@@ -1,20 +1,19 @@
 from datetime import datetime
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import delete, select
-from sqlalchemy.orm import selectinload
-from fastapi import HTTPException
+from sqlalchemy.orm import selectinload, joinedload
+from fastapi import HTTPException, Depends
 
 from src.database.models import Comment, User, Photo
 from src.schemas.comments import CommentCreate, Comment as CommentResponse
 from src.services.auth import auth_service
 from src.services.photo_service import get_photo_by_id
-from sqlalchemy.future import select
+from src.database.db import get_db
 
 async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSession, user: User):
-    stmt = select(Photo).filter_by(id=photo_id)
-    photo = await db.execute(stmt)
+    stmt_photo = select(Photo).filter_by(id=photo_id)
+    photo = await db.execute(stmt_photo)
     photo_db = photo.scalar_one_or_none()
 
     if not photo_db:
@@ -22,52 +21,48 @@ async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSe
 
     current_time = datetime.utcnow()
     comment = Comment(**comment_data.dict(), user_id=user.id, photo_id=photo_id, created_at=current_time)
-    db.add(comment)
-    await db.commit()
-    await db.refresh(comment)
+    photo_db.comments.append(comment)
 
-    stmt = (
-        select(Photo, User.username, Comment)
-        .filter(Photo.id == photo_id)
-        .join(User)
-        .outerjoin(Comment, Comment.photo_id == Photo.id)
-        .options(selectinload(Photo.tags), selectinload(Photo.comments))
-    )
-    result = await db.execute(stmt)
-    row = result.fetchone()
-    loaded_photo = row[0]
+    async with db.begin():
+        await db.refresh(photo_db, options=[joinedload(Photo.comments)])
 
     return CommentResponse(
-        photo_id=loaded_photo.id,
-        username=loaded_photo.user.username,
-        description=loaded_photo.description,
-        image_path=loaded_photo.image_path,
-        tags=[tag.name for tag in loaded_photo.tags] if loaded_photo.tags else [],
+        photo_id=photo_db.id,
+        username=photo_db.user.username,
+        description=photo_db.description,
+        image_path=photo_db.image_path,
+        tags=[tag.name for tag in photo_db.tags] if photo_db.tags else [],
         comments=[CommentResponse(id=comment.id, text=comment.text, user_id=comment.user_id,
-                                  created_at=comment.created_at) for comment in loaded_photo.comments] if loaded_photo.comments else []
+                                   created_at=comment.created_at) for comment in photo_db.comments] if photo_db.comments else []
     )
 
 async def get_comments(photo_id: int, limit: int, db: AsyncSession, user: User):
     photo = await get_photo_by_id(photo_id, db)
-    comments = await db.execute(select(Comment).filter(Comment.photo_id == photo.id).limit(limit))
+    comments = await db.execute(select(Comment).filter(Comment.photo_id == photo.id).limit(limit).options(joinedload(Comment.user)))
     return comments.scalars().all()
 
-async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSession, user: auth_service.get_current_user):
-    comment = await db.execute(select(Comment).filter_by(id=comment_id, user_id=user.id))
-    if comment:
+async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSession, user: User):
+    comment = await db.execute(select(Comment).filter(Comment.id == comment_id, Comment.user_id == user.id))
+    
+    if comment.scalar():
         comment = comment.scalar()
-        if comment.user_id == user.id:
-            for key, value in comment_data.dict().items():
-                setattr(comment, key, value)
-            comment.updated_at = datetime.utcnow()
+        for key, value in comment_data.dict().items():
+            setattr(comment, key, value)
+        comment.updated_at = datetime.utcnow()
 
-            await db.commit()
-            await db.refresh(comment)
-            return comment
+        await db.commit()
+        await db.refresh(comment)
+        return CommentResponse(
+            id=comment.id,
+            text=comment.text,
+            user_id=comment.user_id,
+            created_at=comment.created_at,
+            updated_at=comment.updated_at
+        )
     return None
 
 async def delete_comment(comment_id: int, db: AsyncSession, user: User):
-    comment = await db.execute(select(Comment).filter_by(id=comment_id))
+    comment = await db.execute(select(Comment).filter(Comment.id == comment_id))
 
     if not comment.scalar():
         return None
@@ -80,4 +75,10 @@ async def delete_comment(comment_id: int, db: AsyncSession, user: User):
     await db.execute(delete(Comment).where(Comment.id == comment_id))
     await db.commit()
 
-    return comment_model
+    return CommentResponse(
+        id=comment_model.id,
+        text=comment_model.text,
+        user_id=comment_model.user_id,
+        created_at=comment_model.created_at,
+        updated_at=comment_model.updated_at
+    )

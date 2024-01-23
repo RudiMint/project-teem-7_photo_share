@@ -3,7 +3,6 @@ import pickle
 import cloudinary
 import cloudinary.uploader
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.responses import JSONResponse
@@ -19,12 +18,12 @@ router = APIRouter(prefix="/users", tags=["users"])
 cloudinary.config(cloud_name=config.CLD_NAME, api_key=config.CLD_API_KEY, api_secret=config.CLD_API_SECRET, secure=True)
 
 
-@router.get("/me", response_model=UserResponse, dependencies=[Depends(RateLimiter(times=1, seconds=20))])
+@router.get("/me", response_model=UserResponse)
 async def get_current_user(user: User = Depends(auth_service.get_current_user)):
     return user
 
 
-@router.patch("/avatar", response_model=UserResponse, dependencies=[Depends(RateLimiter(times=1, seconds=20))])
+@router.patch("/avatar", response_model=UserResponse)
 async def get_current_user(
     file: UploadFile = File(),
     user: User = Depends(auth_service.get_current_user),
@@ -51,7 +50,7 @@ async def check_db_connection(db: AsyncSession):
         print(f"Database connection error: {e}")
         return False
 
-@router.get("/check_db", response_model=UserResponse, dependencies=[Depends(RateLimiter(times=1, seconds=20))])
+@router.get("/check_db", response_model=UserResponse)
 async def get_db_status(db: AsyncSession = Depends(get_db)):
     if await check_db_connection(db):
         return JSONResponse(content={"message": "Database is reachable"}, status_code=200)

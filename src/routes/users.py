@@ -2,14 +2,14 @@ import pickle
 
 import cloudinary
 import cloudinary.uploader
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.responses import JSONResponse
 
 from src.database.db import get_db
-from src.database.models import User
+from src.database.models import User, Role
 from src.schemas.user import UserResponse
 from src.services.auth import auth_service
 from src.conf.config import config
@@ -63,7 +63,7 @@ async def get_users(db: AsyncSession = Depends(get_db),
                     current_user: User = Depends(auth_service.get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
-    users = await user_repository.get_all_users(db)
+    users = await repositories_users.get_all_users(db)
     return users
 
 
@@ -73,7 +73,7 @@ async def assign_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
 
-    user = await user_repository.get_user_by_id(db, user_id)
+    user = await repositories_users.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -89,7 +89,7 @@ async def remove_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
 
-    user = await user_repository.get_user_by_id(db, user_id)
+    user = await repositories_users.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.database.models import User
-from src.schemas.comments import CommentCreate, CommentResponse
+from src.schemas.comments import CommentCreate, Comment as CommentResponse
 from src.services.auth import auth_service
 from src.repository import comments as comment_repository
 
@@ -13,9 +13,8 @@ router = APIRouter(prefix='/comments', tags=['comments'])
 @router.post("/", response_model=CommentResponse)
 async def create_comment(photo_id: int, comment: CommentCreate, db: AsyncSession = Depends(get_db),
                          user: User = Depends(auth_service.get_current_user)):
-    comment = await comment_repository.create_comment(photo_id, comment, db, user)
-    return comment
-
+    return await comment_repository.create_comment(photo_id, comment, db, user)
+    
 
 @router.get("/{photo_id}", response_model=list[CommentResponse])
 async def get_comments(photo_id: int, limit: int = Query(10, ge=1, le=100),

@@ -39,14 +39,14 @@ async def upload_photo(file: UploadFile = File(...),
     return photo
 
 
-@router.get("/{user.id}/all", response_model=list[PhotoInfo])
+@router.get("/{user.id}/all")  # response_model=list[PhotoInfo]
 async def get_my_photos(limit: int = Query(10, ge=10, le=500), offset: int = Query(0, ge=0),
                         db: AsyncSession = Depends(get_db), user: User = Depends(auth_service.get_current_user)):
     photos = await repositories_photos.get_my_photos(limit, offset, db, user)
     return photos
 
 
-@router.get("/all", response_model=list[PhotoInfo])
+@router.get("/all")  # response_model=list[PhotoInfo]
 async def get_all_photos(limit: int = Query(10, ge=10, le=500), offset: int = Query(0, ge=0),
                          db: AsyncSession = Depends(get_db), user: User = Depends(auth_service.get_current_user)):
     photos = await repositories_photos.get_all_photos(limit, offset, db, user)

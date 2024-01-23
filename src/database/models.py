@@ -63,6 +63,9 @@ class Photo(Base):
     created_at: Mapped[date] = mapped_column(DateTime, default=func.now())
     updated_at: Mapped[date] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
+    tags = relationship("Tag", secondary="photo_tags", back_populates="photos")
+    user = relationship("User", back_populates="photos")
+
 
 class Tag(Base):
     __tablename__ = "tags"
@@ -70,12 +73,21 @@ class Tag(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, index=True)
 
+    photos = relationship("Photo", secondary="photo_tags", back_populates="tags")
+
 
 class PhotoTag(Base):
     __tablename__ = "photo_tags"
 
     photo_id: Mapped[int] = mapped_column(Integer, ForeignKey("photos.id", ondelete="CASCADE"), primary_key=True)
     tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True)
+
+
+class TransformationType(enum.Enum):
+    zorro = "art:zorro"
+    vignette = "vignette"
+    sepia = "sepia"
+
 
 Photo.tags = relationship("Tag", secondary="photo_tags", back_populates="photos")
 Tag.photos = relationship("Photo", secondary="photo_tags", back_populates="tags")

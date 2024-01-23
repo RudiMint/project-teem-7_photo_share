@@ -21,7 +21,7 @@ async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSe
         raise HTTPException(status_code=404, detail=f"Photo with id {photo_id} not found")
 
     current_time = datetime.utcnow()
-    comment = Comment(**comment_data.dict(), user_id=user.id, image_id=photo_id, created_at=current_time)
+    comment = Comment(**comment_data.dict(), user_id=user.id, photo_id=photo_id, created_at=current_time)
     db.add(comment)
     await db.commit()
     await db.refresh(comment)
@@ -49,7 +49,7 @@ async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSe
 
 async def get_comments(photo_id: int, limit: int, db: AsyncSession, user: User):
     photo = await get_photo_by_id(photo_id, db)
-    comments = await db.execute(select(Comment).filter(Comment.image_id == photo.id).limit(limit))
+    comments = await db.execute(select(Comment).filter(Comment.photo_id == photo.id).limit(limit))
     return comments.scalars().all()
 
 async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSession, user: auth_service.get_current_user):

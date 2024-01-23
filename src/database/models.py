@@ -47,7 +47,7 @@ class Comment(Base):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    image_id: Mapped[int] = mapped_column(Integer, ForeignKey("images.id"), nullable=False)
+    image_id: Mapped[int] = mapped_column(Integer, ForeignKey("photos.id"), nullable=False)
     text: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[date] = mapped_column(DateTime, default=func.now())
     updated_at: Mapped[date] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
@@ -63,12 +63,17 @@ class Photo(Base):
     created_at: Mapped[date] = mapped_column(DateTime, default=func.now())
     updated_at: Mapped[date] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
+    tags = relationship("Tag", secondary="photo_tags", back_populates="photos")
+    user = relationship("User", back_populates="photos")
+
 
 class Tag(Base):
     __tablename__ = "tags"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, index=True)
+
+    photos = relationship("Photo", secondary="photo_tags", back_populates="tags")
 
 
 class PhotoTag(Base):
@@ -77,12 +82,19 @@ class PhotoTag(Base):
     photo_id: Mapped[int] = mapped_column(Integer, ForeignKey("photos.id", ondelete="CASCADE"), primary_key=True)
     tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True)
 
+
+class TransformationType(enum.Enum):
+    zorro = "art:zorro"
+    vignette = "vignette"
+    sepia = "sepia"
+
+
 Photo.tags = relationship("Tag", secondary="photo_tags", back_populates="photos")
 Tag.photos = relationship("Photo", secondary="photo_tags", back_populates="tags")
 User.photos = relationship("Photo", back_populates="user")
 Photo.user = relationship("User", back_populates="photos")
 
 User.comments = relationship("Comment", back_populates="user")
-Photo.comments = relationship("Comment", back_populates="image")
+Photo.comments = relationship("Comment", back_populates="photo")
 Comment.user = relationship("User", back_populates="comments")
 Comment.photo = relationship("Photo", back_populates="comments")

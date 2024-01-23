@@ -1,5 +1,4 @@
 import re
-from ipaddress import ip_address
 from typing import Callable
 from pathlib import Path
 
@@ -29,6 +28,18 @@ user_agent_ban_list = [r"Googlebot", r"Python-urllib"]
 
 @app.middleware("http")
 async def user_agent_ban_middleware(request: Request, call_next: Callable):
+    """
+    Middleware to ban specific User-Agent strings.
+
+    Args:
+        request (Request): The incoming FastAPI request.
+        call_next (Callable): The next callable in the middleware stack.
+
+    Returns:
+        JSONResponse: If the User-Agent matches any of the patterns in the ban list,
+            returns a JSONResponse with a 403 FORBIDDEN status.
+        Response: Calls the next middleware or route in the stack.
+    """
     print(request.headers.get("Authorization"))
     user_agent = request.headers.get("user-agent")
     print(user_agent)
@@ -55,6 +66,15 @@ templates = Jinja2Templates(directory=BASE_DIR / "src" / "templates")
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    """
+    Endpoint to serve the main HTML page.
+
+    Args:
+        request (Request): The incoming FastAPI request.
+
+    Returns:
+        TemplateResponse: Returns the rendered HTML template response.
+    """
     return templates.TemplateResponse(
         "index.html", {"request": request, "our": "Build group WebPython #16"}
     )

@@ -18,6 +18,18 @@ class Settings(BaseSettings):
     @field_validator("ALGORITHM")
     @classmethod
     def validate_algorithm(cls, v):
+        """
+        Validate the provided JWT algorithm.
+
+        Args:
+        - v (str): The algorithm to validate.
+
+        Raises:
+        - ValueError: If the provided algorithm is not supported.
+
+        Returns:
+        - str: The validated algorithm.
+        """
         if v not in ["HS256", "HS512"]:
             raise ValueError("Algorithm not supported")
         return v

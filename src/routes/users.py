@@ -36,7 +36,7 @@ async def get_current_user(
     res_url = cloudinary.CloudinaryImage(public_id).build_url(
         width=250, height=250, crop="fill", version=res.get("version")
     )
-    user = await repositories_users.update_avatar_url(user.email, res_url, db)
+    user = await repositories_users.update_avatar(user.email, res_url, db)
     auth_service.cache.set(user.email, pickle.dumps(user))
     auth_service.cache.expire(user.email, 300)
     return user
@@ -73,7 +73,7 @@ async def assign_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
 
-    user = await repositories_users.get_user_by_id(db, user_id)
+    user = await repositories_users.get_user_by_id(user_id, db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -89,7 +89,7 @@ async def remove_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
 
-    user = await repositories_users.get_user_by_id(db, user_id)
+    user = await repositories_users.get_user_by_id(user_id, db)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -97,3 +97,15 @@ async def remove_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
     await db.commit()
     await db.refresh(user)
     return user
+
+
+@router.put("/set_admin_role", response_model=dict)
+async def set_admin_role(email: str, db: AsyncSession = Depends(get_db)):
+    user = await repositories_users.get_user_by_email(email, db)
+    if user:
+        user.role = Role.admin
+        await db.commit()
+        await db.refresh(user)
+        return {"message": f"User with email {email} now has admin role"}
+    else:
+        raise HTTPException(status_code=404, detail="User not found")

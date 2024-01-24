@@ -64,17 +64,16 @@ app.include_router(comments.router, prefix="/api")
 templates = Jinja2Templates(directory=BASE_DIR / "src" / "templates")
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def index(request: Request):
-    """
-    Endpoint to serve the main HTML page.
 
-    Args:
-        request (Request): The incoming FastAPI request.
-
-    Returns:
-        TemplateResponse: Returns the rendered HTML template response.
     """
-    return templates.TemplateResponse(
-        "index.html", {"request": request, "our": "Build group WebPython #16"}
-    )
+    The index function is executed when you make a GET request to the root of the API.
+    It returns a JSON object with one key, &quot;Hello&quot;, and one value, &quot;World&quot;.
+
+
+    :param request: Request: Get the request object
+    :return: A dictionary, which is then converted to json
+    :doc-author: Trelent
+    """
+    return {"project": "FastPicHub"}

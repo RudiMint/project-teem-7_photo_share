@@ -126,7 +126,7 @@ async def transform_photo(photo_id: int, transform_type: TransformationType, db:
 
     img = qr.make_image(fill_color="black", back_color="white")
     img.save(f"static/qr_codes/transformed_image_{photo_id}.png")
-    base_url = os.environ.get("BASE_URL", "our_url") #Change to our basic URL
+    base_url = "http://localhost:8000" #Change to our basic URL
 
     return {
         "transform_result": transform_result,

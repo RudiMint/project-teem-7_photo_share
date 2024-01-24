@@ -5,6 +5,8 @@ from cloudinary import uploader
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query, status, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
+import qrcode
+import os
 
 from src.database.db import get_db
 from src.database.models import User, TransformationType
@@ -61,9 +63,27 @@ async def get_all_photos(limit: int = Query(10, ge=10, le=500), offset: int = Qu
 @router.put("/transform/{photo_id}")
 async def transform_photo(photo_id: int, transform_type: TransformationType, db: AsyncSession = Depends(get_db),
                           user: User = Depends(auth_service.get_current_user)):
+    os.makedirs("static/qr_codes/", exist_ok=True)
     transform_result = await repositories_photos.transform_photo(photo_id, transform_type, db, user)
-    # return {'message': 'goood'}
-    return transform_result
+
+    transformed_image_url = transform_result.new_image_path
+
+    qr = qrcode.QRCode(
+        version=1,
+        box_size=10,
+        border=5,
+    )
+    qr.add_data(transformed_image_url)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(f"static/qr_codes/transformed_image_{photo_id}.png")
+    base_url = os.environ.get("BASE_URL", "our_url") #Change to our basic URL
+
+    return {
+        "transform_result": transform_result,
+        "qr_code_url": f"{base_url}/static/qr_codes/transformed_image_{photo_id}.png",
+    }
 
 
 @router.get("/{photo_id}", response_model=PhotoResponse)  # response_model=PhotoWithTagsSchema

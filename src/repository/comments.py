@@ -26,8 +26,8 @@ async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSe
         await db.commit()
         await db.refresh(comment)
         await db.refresh(photo_db)
-
-        return {"comment_id": comment.id, "photo_id": photo_db.id}
+        return comment
+        # return {"comment_id": comment.id, "photo_id": photo_db.id}
 
     except Exception as e:
         print(f"An error occurred: {e}")

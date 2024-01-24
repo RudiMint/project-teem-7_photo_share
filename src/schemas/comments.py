@@ -11,7 +11,7 @@ class CommentCreate(CommentBase):
 class Comment(CommentBase):
     id: int
     user_id: int
-    image_id: int
+    photo_id: int
     created_at: datetime
     updated_at: datetime
 

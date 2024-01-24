@@ -12,29 +12,24 @@ from src.services.photo_service import get_photo_by_id
 from src.database.db import get_db
 
 async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSession, user: User):
-    stmt_photo = select(Photo).filter_by(id=photo_id)
-    photo = await db.execute(stmt_photo)
-    photo_db = photo.scalar_one_or_none()
+    try:
+        stmt_photo = select(Photo).filter_by(id=photo_id)
+        photo = await db.execute(stmt_photo)
+        photo_db = photo.scalar_one_or_none()
 
-    if not photo_db:
-        raise HTTPException(status_code=404, detail=f"Photo with id {photo_id} not found")
+        if not photo_db:
+            raise HTTPException(status_code=404, detail=f"Photo with id {photo_id} not found")
 
-    current_time = datetime.utcnow()
-    comment = Comment(**comment_data.dict(), user_id=user.id, photo_id=photo_id, created_at=current_time)
-    photo_db.comments.append(comment)
+        current_time = datetime.utcnow()
+        comment = Comment(**comment_data.dict(), user_id=user.id, photo_id=photo_id, created_at=current_time)
+        photo_db.comments.append(comment)
+        await db.commit()
 
-    async with db.begin():
-        await db.refresh(photo_db, options=[joinedload(Photo.comments)])
+        return {"comment_id": comment.id, "photo_id": photo_db.id}
 
-    return CommentResponse(
-        photo_id=photo_db.id,
-        username=photo_db.user.username,
-        description=photo_db.description,
-        image_path=photo_db.image_path,
-        tags=[tag.name for tag in photo_db.tags] if photo_db.tags else [],
-        comments=[CommentResponse(id=comment.id, text=comment.text, user_id=comment.user_id,
-                                   created_at=comment.created_at) for comment in photo_db.comments] if photo_db.comments else []
-    )
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 async def get_comments(photo_id: int, limit: int, db: AsyncSession, user: User):
     photo = await get_photo_by_id(photo_id, db)

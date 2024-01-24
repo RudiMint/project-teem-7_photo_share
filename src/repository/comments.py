@@ -1,9 +1,8 @@
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select, delete
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import HTTPException, Depends
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from src.database.models import Comment, User, Photo
 from src.schemas.comments import CommentCreate, Comment as CommentResponse

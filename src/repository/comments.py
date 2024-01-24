@@ -58,24 +58,17 @@ async def get_comments(photo_id: int, limit: int, db: AsyncSession, user: User):
     return comments.scalars().all()
 
 async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSession, user: User):
-    """
-    Update an existing comment.
-
-    :param comment_id: int: The ID of the comment to be updated.
-    :param comment_data: CommentCreate: The updated details of the comment.
-    :param db: AsyncSession: Database session dependency.
-    :param user: User: Current authenticated user dependency.
-    :return: CommentResponse: Details of the updated comment.
-    :raises HTTPException 404: If the specified comment is not found.
-    :raises HTTPException 500: If an internal server error occurs.
-    """
     try:
-        stmt_comment = select(Comment).filter_by(id=comment_id, user_id=user.id)
+        stmt_comment = select(Comment).filter_by(id=comment_id)
         comment = await db.execute(stmt_comment)
         comment_db = comment.scalar_one_or_none()
 
         if not comment_db:
             raise HTTPException(status_code=404, detail=f"Comment with id {comment_id} not found")
+
+        if comment_db.user_id != user.id:
+            print(f"User {user.id} attempted to edit comment {comment_id} without permission.")
+            raise HTTPException(status_code=403, detail="You do not have permission to edit this comment")
 
         for key, value in comment_data.dict().items():
             setattr(comment_db, key, value)
@@ -86,8 +79,12 @@ async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSe
 
         return comment_db
 
+    except HTTPException as http_exception:
+        print(f"HTTPException: {http_exception}")
+        raise  # Re-raise the exception to let FastAPI handle it
+
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 async def delete_comment(comment_id: int, db: AsyncSession, user: User):

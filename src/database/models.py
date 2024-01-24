@@ -8,20 +8,56 @@ from pydantic import BaseModel
 
 
 class Base(DeclarativeBase):
+    """
+    Base class for declarative SQLAlchemy models.
+    """
     pass
 
 
 class Role(enum.Enum):
+    """
+    Enumeration representing user roles.
+
+    Attributes:
+    - admin (str): Administrator role.
+    - moderator (str): Moderator role.
+    - user (str): User role.
+    """
     admin: str = "admin"
     moderator: str = "moderator"
     user: str = "user"
 
 
 class CommentCreate(BaseModel):
+    """
+    Pydantic model for creating comments.
+
+    Attributes:
+    - text (str): Comment text.
+    """
     text: str
 
 
 class User(Base):
+    """
+    SQLAlchemy model representing user information.
+
+    Attributes:
+    - id (int): User ID (primary key).
+    - username (str): User's username.
+    - email (str): User's email (unique).
+    - password (str): User's password.
+    - avatar (str): URL of the user's avatar.
+    - refresh_token (str): Refresh token for authentication.
+    - created_at (date): Date of user creation.
+    - updated_at (date): Date of last user update.
+    - role (Enum): User's role (admin, moderator, user).
+    - confirmed (bool): Flag indicating if the user's email is confirmed.
+
+    Properties:
+    - is_admin (bool): Property indicating if the user has an admin role.
+    - is_moderator (bool): Property indicating if the user has a moderator role.
+    """
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(50))
@@ -36,14 +72,37 @@ class User(Base):
 
     @property
     def is_admin(self):
+        """
+        Check if the user has an admin role.
+
+        Returns:
+        - bool: True if the user has an admin role, False otherwise.
+        """
         return self.role == Role.admin
 
     @property
     def is_moderator(self):
+        """
+        Check if the user has a moderator role.
+
+        Returns:
+        - bool: True if the user has a moderator role, False otherwise.
+        """
         return self.role == Role.moderator
 
 
 class Comment(Base):
+    """
+    SQLAlchemy model representing comments on photos.
+
+    Attributes:
+    - id (int): Comment ID (primary key).
+    - user_id (int): User ID (foreign key) who created the comment.
+    - photo_id (int): Photo ID (foreign key) to which the comment belongs.
+    - text (str): Comment text.
+    - created_at (date): Date of comment creation.
+    - updated_at (date): Date of last comment update.
+    """
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
@@ -54,6 +113,21 @@ class Comment(Base):
 
 
 class Photo(Base):
+    """
+    SQLAlchemy model representing photos.
+
+    Attributes:
+    - id (int): Photo ID (primary key).
+    - image_path (str): Path to the photo image.
+    - description (str): Photo description.
+    - owner_id (int): User ID (foreign key) who owns the photo.
+    - created_at (date): Date of photo creation.
+    - updated_at (date): Date of last photo update.
+
+    Relationships:
+    - tags: Many-to-many relationship with Tag model.
+    - user: Many-to-one relationship with User model.
+    """
     __tablename__ = "photos"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -68,6 +142,16 @@ class Photo(Base):
 
 
 class Tag(Base):
+    """
+    SQLAlchemy model representing tags.
+
+    Attributes:
+    - id (int): Tag ID (primary key).
+    - name (str): Tag name (unique).
+
+    Relationships:
+    - photos: Many-to-many relationship with Photo model.
+    """
     __tablename__ = "tags"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -77,6 +161,13 @@ class Tag(Base):
 
 
 class PhotoTag(Base):
+    """
+    SQLAlchemy model representing the association table between photos and tags.
+
+    Attributes:
+    - photo_id (int): Photo ID (foreign key) in the association.
+    - tag_id (int): Tag ID (foreign key) in the association.
+    """
     __tablename__ = "photo_tags"
 
     photo_id: Mapped[int] = mapped_column(Integer, ForeignKey("photos.id", ondelete="CASCADE"), primary_key=True)
@@ -84,6 +175,14 @@ class PhotoTag(Base):
 
 
 class TransformationType(enum.Enum):
+    """
+    Enumeration representing photo transformation types.
+
+    Attributes:
+    - zorro (str): Zorro transformation type.
+    - vignette (str): Vignette transformation type.
+    - sepia (str): Sepia transformation type.
+    """
     zorro = "art:zorro"
     vignette = "vignette"
     sepia = "sepia"

@@ -3,7 +3,6 @@ import pickle
 import cloudinary
 import cloudinary.uploader
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
-from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.responses import JSONResponse
@@ -19,17 +18,37 @@ router = APIRouter(prefix="/users", tags=["users"])
 cloudinary.config(cloud_name=config.CLD_NAME, api_key=config.CLD_API_KEY, api_secret=config.CLD_API_SECRET, secure=True)
 
 
-@router.get("/me", response_model=UserResponse, dependencies=[Depends(RateLimiter(times=1, seconds=20))])
+@router.get("/me", response_model=UserResponse)
 async def get_current_user(user: User = Depends(auth_service.get_current_user)):
+    """
+    Endpoint to get information about the currently authenticated user.
+
+    Args:
+    - user (User): Current authenticated user.
+
+    Returns:
+    - UserResponse: User information response.
+    """
     return user
 
 
-@router.patch("/avatar", response_model=UserResponse, dependencies=[Depends(RateLimiter(times=1, seconds=20))])
+@router.patch("/avatar", response_model=UserResponse)
 async def get_current_user(
     file: UploadFile = File(),
     user: User = Depends(auth_service.get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Endpoint to update user avatar.
+
+    Args:
+    - file (UploadFile): Avatar file to upload.
+    - user (User): Current authenticated user.
+    - db (AsyncSession): Async database session.
+
+    Returns:
+    - UserResponse: Updated user information response.
+    """
     public_id = f"Web16/{user.email}"
     res = cloudinary.uploader.upload(file.file, public_id=public_id, owerite=True)
     print(res)
@@ -44,15 +63,23 @@ async def get_current_user(
 
 async def check_db_connection(db: AsyncSession):
     try:
-        # Execute a simple query to check the connection
         result = await db.execute(select(1))
         return True
     except Exception as e:
         print(f"Database connection error: {e}")
         return False
 
-@router.get("/check_db", response_model=UserResponse, dependencies=[Depends(RateLimiter(times=1, seconds=20))])
+@router.get("/check_db", response_model=UserResponse)
 async def get_db_status(db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint to check the status of the database connection.
+
+    Args:
+    - db (AsyncSession): Async database session.
+
+    Returns:
+    - JSONResponse: JSON response with the status message.
+    """
     if await check_db_connection(db):
         return JSONResponse(content={"message": "Database is reachable"}, status_code=200)
     else:
@@ -61,6 +88,19 @@ async def get_db_status(db: AsyncSession = Depends(get_db)):
 @router.get("/", response_model=list[UserResponse])
 async def get_users(db: AsyncSession = Depends(get_db),
                     current_user: User = Depends(auth_service.get_current_user)):
+    """
+    Endpoint to get a list of all users.
+
+    Args:
+    - db (AsyncSession): Async database session.
+    - current_user (User): Current authenticated user.
+
+    Returns:
+    - List[UserResponse]: List of user information responses.
+
+    Raises:
+    - HTTPException: If the current user is not an admin.
+    """
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
     users = await repositories_users.get_all_users(db)
@@ -70,6 +110,20 @@ async def get_users(db: AsyncSession = Depends(get_db),
 @router.post("/assign-moderator-role/{user_id}", response_model=UserResponse)
 async def assign_moderator_role(user_id: int, db: AsyncSession = Depends(get_db),
                                 current_user: User = Depends(auth_service.get_current_user)):
+    """
+    Endpoint to assign the moderator role to a user.
+
+    Args:
+    - user_id (int): User ID to assign the moderator role.
+    - db (AsyncSession): Async database session.
+    - current_user (User): Current authenticated user.
+
+    Returns:
+    - UserResponse: Updated user information response.
+
+    Raises:
+    - HTTPException: If the current user is not an admin or the user to be modified is not found.
+    """
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
 
@@ -86,6 +140,20 @@ async def assign_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
 @router.post("/remove-moderator-role/{user_id}", response_model=UserResponse)
 async def remove_moderator_role(user_id: int, db: AsyncSession = Depends(get_db),
                                 current_user: User = Depends(auth_service.get_current_user)):
+    """
+    Endpoint to remove the moderator role from a user.
+
+    Args:
+    - user_id (int): User ID to remove the moderator role.
+    - db (AsyncSession): Async database session.
+    - current_user (User): Current authenticated user.
+
+    Returns:
+    - UserResponse: Updated user information response.
+
+    Raises:
+    - HTTPException: If the current user is not an admin or the user to be modified is not found.
+    """
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="Permission denied")
 
@@ -101,6 +169,19 @@ async def remove_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
 
 @router.put("/set_admin_role", response_model=dict)
 async def set_admin_role(email: str, db: AsyncSession = Depends(get_db)):
+    """
+    Endpoint to set the admin role for a user.
+
+    Args:
+    - email (str): Email of the user to set the admin role.
+    - db (AsyncSession): Async database session.
+
+    Returns:
+    - dict: Response message.
+
+    Raises:
+    - HTTPException: If the user is not found.
+    """
     user = await repositories_users.get_user_by_email(email, db)
     if user:
         user.role = Role.admin

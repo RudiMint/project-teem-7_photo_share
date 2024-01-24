@@ -5,6 +5,27 @@ from src.services.auth import auth_service
 
 
 class RoleAccess:
+    """
+    Custom dependency for role-based access control.
+
+    This dependency is used to check if the user has the required role to access
+    a particular route.
+
+    Args:
+        allowed_roles (list[Role]): A list of roles that are allowed to access the route.
+
+    Raises:
+        HTTPException: If the user does not have the required role, a 403 FORBIDDEN status
+            exception is raised.
+
+    Example:
+        ```python
+        # Example usage in a FastAPI route
+        @app.get("/admin", dependencies=[Depends(RoleAccess([Role.admin]))])
+        async def admin_route():
+            return {"message": "Admin access granted"}
+        ```
+    """
     def __init__(self, allowed_roles: list[Role]):
         """
         Create an instance of RoleAccess.
@@ -17,11 +38,15 @@ class RoleAccess:
         self, request: Request, user: User = Depends(auth_service.get_current_user)
     ):
         """
-        Check if the user has the required role to access the resource.
+        Call method to check if the user has the required role.
 
-        :param request: Request: The incoming request.
-        :param user: User: Current authenticated user dependency.
-        :raises HTTPException 403: If the user does not have the required role.
+        Args:
+            request (Request): The FastAPI request.
+            user (User): The current authenticated user.
+
+        Raises:
+            HTTPException: If the user does not have the required role, a 403 FORBIDDEN status
+                exception is raised.
         """
         print(user.role, self.allowed_roles)
         if user.role not in self.allowed_roles:

@@ -366,6 +366,17 @@ files = [
 ]
 
 [[package]]
+name = "django-qrcode"
+version = "0.3"
+description = "Django application that provides simple templatetags to generate QR-codes"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-qrcode-0.3.tar.gz", hash = "sha256:88598af03087859c30b83ecd345dd3e988d739f13543e0bef9274eda18d55e0c"},
+]
+
+[[package]]
 name = "dnspython"
 version = "2.4.2"
 description = "DNS toolkit"
@@ -1193,4 +1204,4 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "3bbd0d08f9a7595cc103f030488222a2de082d7f14138a29e9ff16abcf6ec0f0"
+content-hash = "d86aed711531a6392f3c839938de4fd351a80c55a2f7a213c3a6883ee3cdebba"

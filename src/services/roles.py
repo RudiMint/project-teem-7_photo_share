@@ -27,6 +27,11 @@ class RoleAccess:
         ```
     """
     def __init__(self, allowed_roles: list[Role]):
+        """
+        Create an instance of RoleAccess.
+
+        :param allowed_roles: List[Role]: The list of roles allowed to access the resource.
+        """
         self.allowed_roles = allowed_roles
 
     async def __call__(

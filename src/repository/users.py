@@ -111,6 +111,7 @@ async def update_avatar(email, url: str, db: AsyncSession) -> User:
     user = await get_user_by_email(email, db)
     user.avatar = url
     await db.commit()
+    await db.refresh(user)
     return user
 
 async def get_all_users(db: AsyncSession = Depends(get_db)):

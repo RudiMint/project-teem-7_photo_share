@@ -22,8 +22,10 @@ async def create_comment(photo_id: int, comment_data: CommentCreate, db: AsyncSe
 
         current_time = datetime.utcnow()
         comment = Comment(**comment_data.dict(), user_id=user.id, photo_id=photo_id, created_at=current_time)
-        photo_db.comments.append(comment)
+        db.add(comment)
         await db.commit()
+        await db.refresh(comment)
+        await db.refresh(photo_db)
 
         return {"comment_id": comment.id, "photo_id": photo_db.id}
 

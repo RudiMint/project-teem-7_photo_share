@@ -10,7 +10,7 @@ from src.repository import comments as comment_repository
 router = APIRouter(prefix='/comments', tags=['comments'])
 
 
-@router.post("/", response_model=CommentResponse)
+@router.post("/") #response_model=CommentResponse
 async def create_comment(photo_id: int, comment: CommentCreate, db: AsyncSession = Depends(get_db),
                          user: User = Depends(auth_service.get_current_user)):
     return await comment_repository.create_comment(photo_id, comment, db, user)

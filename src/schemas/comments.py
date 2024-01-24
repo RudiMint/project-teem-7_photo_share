@@ -1,30 +1,43 @@
-from fastapi import Request, Depends, HTTPException, status
+from typing import Optional
+from datetime import datetime
+from pydantic import BaseModel
 
-from src.database.models import Role, User
-from src.services.auth import auth_service
+class CommentBase(BaseModel):
+    """
+    Base model for creating a comment.
 
+    :param text: str: The text content of the comment.
+    """
+    text: str
 
-class RoleAccess:
-    def __init__(self, allowed_roles: list[Role]):
-        """
-        Create an instance of RoleAccess.
+class CommentCreate(CommentBase):
+    """
+    Pydantic model for creating a comment.
+    Inherits from CommentBase.
 
-        :param allowed_roles: List[Role]: The list of roles allowed to access the resource.
-        """
-        self.allowed_roles = allowed_roles
+    No additional attributes.
+    """
+    pass
 
-    async def __call__(
-        self, request: Request, user: User = Depends(auth_service.get_current_user)
-    ):
-        """
-        Check if the user has the required role to access the resource.
+class Comment(CommentBase):
+    """
+    Pydantic model representing a comment retrieved from the database.
+    Inherits from CommentBase.
 
-        :param request: Request: The incoming request.
-        :param user: User: Current authenticated user dependency.
-        :raises HTTPException 403: If the user does not have the required role.
-        """
-        print(user.role, self.allowed_roles)
-        if user.role not in self.allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="FORBIDDEN"
-            )
+    :param id: int: The ID of the comment.
+    :param user_id: int: The ID of the user who created the comment.
+    :param photo_id: int: The ID of the photo associated with the comment.
+    :param created_at: datetime: The timestamp indicating when the comment was created.
+    :param updated_at: datetime: The timestamp indicating when the comment was last updated.
+
+    Config:
+        orm_mode (bool): Indicates that this Pydantic model is used with an ORM (SQLAlchemy) model.
+    """
+    id: int
+    user_id: int
+    photo_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True

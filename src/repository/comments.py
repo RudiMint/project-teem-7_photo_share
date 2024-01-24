@@ -70,7 +70,7 @@ async def edit_comment(comment_id: int, comment_data: CommentCreate, db: AsyncSe
     :raises HTTPException 500: If an internal server error occurs.
     """
     try:
-        stmt_comment = select(Comment).filter_by(id=comment_id, user_id=user.id)
+        stmt_comment = select(Comment).filter_by(id=comment_id)
         comment = await db.execute(stmt_comment)
         comment_db = comment.scalar_one_or_none()
 

@@ -1,5 +1,3 @@
-import pickle
-
 import cloudinary
 import cloudinary.uploader
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
@@ -33,7 +31,7 @@ async def get_current_user(user: User = Depends(auth_service.get_current_user)):
 
 
 @router.patch("/avatar", response_model=UserResponse)
-async def get_current_user(
+async def update_avatar(
     file: UploadFile = File(),
     user: User = Depends(auth_service.get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -60,31 +58,7 @@ async def get_current_user(
     return user
 
 
-async def check_db_connection(db: AsyncSession):
-    try:
-        result = await db.execute(select(1))
-        return True
-    except Exception as e:
-        print(f"Database connection error: {e}")
-        return False
-
-@router.get("/check_db", response_model=UserResponse)
-async def get_db_status(db: AsyncSession = Depends(get_db)):
-    """
-    Endpoint to check the status of the database connection.
-
-    Args:
-    - db (AsyncSession): Async database session.
-
-    Returns:
-    - JSONResponse: JSON response with the status message.
-    """
-    if await check_db_connection(db):
-        return JSONResponse(content={"message": "Database is reachable"}, status_code=200)
-    else:
-        return JSONResponse(content={"message": "Failed to connect to the database"}, status_code=500)
-
-@router.get("/", response_model=list[UserResponse])
+@router.get("/all_users", response_model=list[UserResponse])
 async def get_users(db: AsyncSession = Depends(get_db),
                     current_user: User = Depends(auth_service.get_current_user)):
     """
@@ -166,7 +140,6 @@ async def remove_moderator_role(user_id: int, db: AsyncSession = Depends(get_db)
     return user
 
 
-@router.put("/set_admin_role", response_model=dict)
 async def set_admin_role(email: str, db: AsyncSession = Depends(get_db)):
     """
     Endpoint to set the admin role for a user.
